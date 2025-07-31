@@ -1,0 +1,42 @@
+# Translation file
+
+#
+# Generic
+#
+
+# Module label 'ModuleRibaExporterName'
+ModuleRibaExporterName = RibaExporter
+# Module description 'ModuleRibaExporterDesc'
+ModuleRibaExporterDesc = RibaExporter description
+
+#
+# Admin page
+#
+RibaExporterSetup = RibaExporter setup
+Settings = Settings
+RibaExporterSetupPage = RibaExporter setup page
+NewSection=New section
+RIBAEXPORTER_MYPARAM1 = My param 1
+RIBAEXPORTER_MYPARAM1Tooltip = My param 1 tooltip
+RIBAEXPORTER_MYPARAM2=My param 2
+RIBAEXPORTER_MYPARAM2Tooltip=My param 2 tooltip
+
+
+#
+# About page
+#
+About = About
+RibaExporterAbout = About RibaExporter
+RibaExporterAboutPage = RibaExporter about page
+
+#
+# Sample page
+#
+RibaExporterArea = Home RibaExporter
+MyPageName = My page name
+
+#
+# Sample widget
+#
+MyWidget = My widget
+MyWidgetDescription = My widget description
