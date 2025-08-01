@@ -1,0 +1,16 @@
+{
+  "name": "herolapse/dolibarr-ribaexporter",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Dawid Weglarz",
+      "email": "d.weglarz@herolapse.com"
+    }
+  ],
+  "type": "project",
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=8.3",
+    "devcode-it/cbi": "dev-master"
+  }
+}
