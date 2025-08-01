@@ -46,14 +46,14 @@ class modRibaExporter extends DolibarrModules
 
 		// Id for module (must be unique).
 		// Use here a free id (See in Home -> System information -> Dolibarr for list of used modules id).
-		$this->numero = 500000; // TODO Go on page https://wiki.dolibarr.org/index.php/List_of_modules_id to reserve an id number for your module
+		$this->numero = 182050;
 
 		// Key text used to identify module (for permissions, menus, etc...)
 		$this->rights_class = "ribaexporter";
 
 		// Family can be 'base' (core modules),'crm','financial','hr','projects','products','ecm','technic' (transverse modules),'interface' (link with external tools),'other','...'
 		// It is used to group modules by family in module setup page
-		$this->family = "other";
+		$this->family = "financial";
 
 		// Module position in the family on 2 digits ('01', '10', '20', ...)
 		$this->module_position = "90";
@@ -110,15 +110,15 @@ class modRibaExporter extends DolibarrModules
 			"theme" => 0,
 			// Set this to relative path of css file if module has its own css file
 			"css" => [
-				//    '/ribaexporter/css/ribaexporter.css.php',
+				// '/ribaexporter/css/ribaexporter.css.php',
 			],
 			// Set this to relative path of js file if module must load a js on all pages
 			"js" => [
-				//   '/ribaexporter/js/ribaexporter.js.php',
+				// '/ribaexporter/js/ribaexporter.js.php',
 			],
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			/* BEGIN MODULEBUILDER HOOKSCONTEXTS */
-			"hooks" => ["invoicecard", "invoicelist"],
+			"hooks" => ["invoicecard", "invoicelist", "bankcard"],
 			/* END MODULEBUILDER HOOKSCONTEXTS */
 			// Set this to 1 if features of module are opened to external users
 			"moduleforexternal" => 0,
@@ -139,7 +139,7 @@ class modRibaExporter extends DolibarrModules
 		// A condition to hide module
 		$this->hidden = getDolGlobalInt("MODULE_RIBAEXPORTER_DISABLED"); // A condition to disable module;
 		// List of module class names that must be enabled if this module is enabled. Example: array('always'=>array('modModuleToEnable1','modModuleToEnable2'), 'FR'=>array('modModuleToEnableFR')...)
-		$this->depends = [];
+		$this->depends = ["modFacture", "modBanque"];
 		// List of module class names to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
 		$this->requiredby = [];
 		// List of module class names this module is in conflict with. Example: array('modModuleToDisable1', ...)
@@ -149,8 +149,8 @@ class modRibaExporter extends DolibarrModules
 		$this->langfiles = ["ribaexporter@ribaexporter"];
 
 		// Prerequisites
-		$this->phpmin = [7, 1]; // Minimum version of PHP required by module
-		$this->need_dolibarr_version = [19, -3]; // Minimum version of Dolibarr required by module
+		$this->phpmin = [8, 3]; // Minimum version of PHP required by module
+		$this->need_dolibarr_version = [21, -3]; // Minimum version of Dolibarr required by module
 		$this->need_javascript_ajax = 0;
 
 		// Messages at activation
@@ -466,13 +466,30 @@ class modRibaExporter extends DolibarrModules
 
 		// Create extrafields during init
 		//include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
-		//$extrafields = new ExtraFields($this->db);
-		//$result0=$extrafields->addExtraField('ribaexporter_separator1', "Separator 1", 'separator', 1,  0, 'thirdparty',   0, 0, '', array('options'=>array(1=>1)), 1, '', 1, 0, '', '', 'ribaexporter@ribaexporter', 'isModEnabled("ribaexporter")');
-		//$result1=$extrafields->addExtraField('ribaexporter_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', -1, 0, '', '', 'ribaexporter@ribaexporter', 'isModEnabled("ribaexporter")');
-		//$result2=$extrafields->addExtraField('ribaexporter_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', -1, 0, '', '', 'ribaexporter@ribaexporter', 'isModEnabled("ribaexporter")');
-		//$result3=$extrafields->addExtraField('ribaexporter_myattr3', "New Attr 3 label", 'varchar', 1, 10, 'bank_account', 0, 0, '', '', 1, '', -1, 0, '', '', 'ribaexporter@ribaexporter', 'isModEnabled("ribaexporter")');
-		//$result4=$extrafields->addExtraField('ribaexporter_myattr4', "New Attr 4 label", 'select',  1,  3, 'thirdparty',   0, 1, '', array('options'=>array('code1'=>'Val1','code2'=>'Val2','code3'=>'Val3')), 1,'', -1, 0, '', '', 'ribaexporter@ribaexporter', 'isModEnabled("ribaexporter")');
-		//$result5=$extrafields->addExtraField('ribaexporter_myattr5', "New Attr 5 label", 'text',    1, 10, 'user',         0, 0, '', '', 1, '', -1, 0, '', '', 'ribaexporter@ribaexporter', 'isModEnabled("ribaexporter")');
+		$extrafields = new ExtraFields($this->db);
+		$result = $extrafields->addExtraField(
+			"ribaexporter_codice_sia", // attrname
+			"SIA Code", // label
+			"varchar", // type
+			100, // position
+			"5", // size
+			"bank_account", // elementtype
+			1, // unique
+			0, // required
+			"", // default_value
+			"", // param
+			1, // alwayseditable
+			"", // perms
+			"1", // list (1 = visible on list + form)
+			"Codice SIA for RIBA Export", // help
+			"", // computed
+			"", // entity
+			"", // langfile
+			"1", // enabled
+			0, // totalizable
+			1, // printable
+			[], // moreparams
+		);
 
 		// Permissions
 		$this->remove($options);
