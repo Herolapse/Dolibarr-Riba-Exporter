@@ -2,7 +2,7 @@
 /* Copyright (C) 2004-2018	Laurent Destailleur			<eldy@users.sourceforge.net>
  * Copyright (C) 2018-2019	Nicolas ZABOURI				<info@inovea-conseil.com>
  * Copyright (C) 2019-2024	Frédéric France				<frederic.france@free.fr>
- * Copyright (C) 2025		Herolapse Admin
+ * Copyright (C) 2025		Herolapse Admin         <d.weglarz@herolapse.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,9 +65,10 @@ class modRibaExporter extends DolibarrModules
 
 		// DESCRIPTION_FLAG
 		// Module description, used if translation string 'ModuleRibaExporterDesc' not found (RibaExporter is name of module).
-		$this->description = "RibaExporterDescription";
+		$this->description = "Dolibarr module to export invoices to RIBA format.";
 		// Used only if file README.md and README-LL.md not found.
-		$this->descriptionlong = "RibaExporterDescription";
+		$this->descriptionlong =
+			"This module allows you to export invoices to the RIBA format, which is used in Italy for bank transfers and direct debits. It groups invoices by bank account and generates RIBA files for each bank.";
 
 		// Author
 		$this->editor_name = "Herolapse s.r.l.";
@@ -467,6 +468,8 @@ class modRibaExporter extends DolibarrModules
 		// Create extrafields during init
 		//include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 		$extrafields = new ExtraFields($this->db);
+
+		// SIA Code (string)
 		$result = $extrafields->addExtraField(
 			"ribaexporter_codice_sia", // attrname
 			"SIA Code", // label
@@ -488,6 +491,31 @@ class modRibaExporter extends DolibarrModules
 			"1", // enabled
 			0, // totalizable
 			1, // printable
+			[], // moreparams
+		);
+
+		// Riba exported (boolean)
+		$result = $extrafields->addExtraField(
+			"ribaexporter_riba_exported", // attrname
+			"Riba Exported", // label
+			"boolean", // type
+			200, // position
+			"", // size
+			"facture", // elementtype
+			0, // unique
+			0, // required
+			0, // default_value
+			"", // param
+			1, // alwayseditable
+			"", // perms
+			"1", // list (1 = visible on list + form)
+			"Riba already Exported", // help
+			"", // computed
+			"", // entity
+			"", // langfile
+			"1", // enabled
+			0, // totalizable
+			0, // printable
 			[], // moreparams
 		);
 

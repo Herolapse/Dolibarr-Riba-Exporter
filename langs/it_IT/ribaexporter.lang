@@ -1,3 +1,9 @@
 # Translation file
 
 ExportRiba = Esporta Riba
+SIAMissing = Codice SIA mancante
+InvalidInvoice = Fattura non valida
+SQLError = Errore database
+RibaExportError = Errore di esportazione Riba
+ZipExportError = Errore di esportazione Zip
+RibaExportSuccess = Esportazione Riba completata con successo

@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . "/../vendor/autoload.php";
 
 use DevCode\CBI\RiBa\RiBa;
@@ -10,7 +11,7 @@ class ActionsRibaExporter
 	/**
 	 * Add an "export riba" option to the mass actions dropdown in the invoice list.
 	 */
-	function addMoreMassActions($parameters, &$object, &$action, $hookmanager)
+	public function addMoreMassActions($parameters, &$object, &$action, $hookmanager)
 	{
 		global $langs;
 
@@ -23,14 +24,24 @@ class ActionsRibaExporter
 	/**
 	 * Handle the export to RIBA action when selected from the mass actions dropdown.
 	 */
-	function doMassActions($parameters, &$object, &$action, $hookmanager)
+	public function doMassActions($parameters, &$object, &$action, $hookmanager)
 	{
-		global $conf, $user, $langs, $db;
-
 		// Check if the action is export to RIBA
-		if ($_REQUEST["massaction"] != "export_to_riba") {
+		if (!isset($_REQUEST["massaction"]) or $_REQUEST["massaction"] != "export_to_riba") {
 			return 0; // Not the right action
+		} else {
+			// Export RIBA
+			$this->exportRibas($parameters, $object, $action, $hookmanager);
 		}
+	}
+
+	/*
+	 * Export invoices to RIBA format.
+	 * This function groups invoices by bank account and generates RIBA files for each bank.
+	 */
+	private function exportRibas($parameters, &$object, &$action, $hookmanager)
+	{
+		global $conf, $langs, $db, $user;
 
 		// Retrive company information
 		$company = new Societe($db);
@@ -63,6 +74,7 @@ class ActionsRibaExporter
 			// Check if SIA code is set
 			if (empty($sia_code)) {
 				// If SIA code is not set, skip this bank
+				setEventMessages($langs->trans("SIAMissing") . ": " . $bank->label, null, "errors");
 				continue;
 			}
 
@@ -74,7 +86,8 @@ class ActionsRibaExporter
 				$province_code = $obj->code_departement;
 			} else {
 				// Error retrieving province code
-				setEventMessages($langs->trans("Error while retrieving province code for ") . $bank->label, null, "errors");
+				setEventMessages($langs->trans("SQLError") . ": " . $bank->label, null, "errors");
+				continue;
 			}
 
 			// Prepare the RIBA export information
@@ -83,7 +96,7 @@ class ActionsRibaExporter
 				"data_creazione" => date("Y-m-d"),
 
 				"creditore" => [
-					"ragione_sociale" => $bank->proprio,
+					"ragione_sociale" => $bank->owner_name,
 					"partita_iva" => $vat_number,
 					"codice_fiscale" => "",
 					"cap" => $bank->owner_zip,
@@ -132,21 +145,32 @@ class ActionsRibaExporter
 				$creditor = new Societe($db);
 				$creditor->fetch($invoice->socid);
 
+				// If invoice is not in validation state, skip it
+				if ($invoice->statut != Facture::STATUS_VALIDATED) {
+					setEventMessages($langs->trans("InvalidInvoice") . ": " . $invoice->ref, null, "warnings");
+					continue;
+				}
+
 				// Retrive bank state information
-				$sql = "SELECT code_departement FROM " . MAIN_DB_PREFIX . "c_departements WHERE rowid = " . ((int) $creditor->fk_departement);
+				$sql = "SELECT code_departement FROM " . MAIN_DB_PREFIX . "c_departements WHERE rowid = " . ((int) $creditor->state_id);
 				$resql = $db->query($sql);
 				if ($resql && $db->num_rows($resql) > 0) {
 					$obj = $db->fetch_object($resql);
 					$province_code = $obj->code_departement;
 				} else {
 					// Error retrieving province code
-					setEventMessages($langs->trans("Error while retrieving province code for ") . $bank->label, null, "errors");
+					setEventMessages($langs->trans("SQLError") . ": " . $bank->label, null, "errors");
+					continue;
 				}
+
+				// Set invoice as exported
+				$invoice->array_options["options_ribaexporter_riba_exported"] = 1;
+				$invoice->update($user);
 
 				$invoices_info[] = [
 					"numero" => 1,
 					"data_scadenza" => date("dmy", strtotime($invoice->date_lim_reglement)),
-					"descrizione" => $invoice->description,
+					"descrizione" => $invoice->description ?? "",
 					"importo" => $invoice->total_ttc,
 
 					"debitore" => [
@@ -164,9 +188,9 @@ class ActionsRibaExporter
 			}
 
 			// Add the invoices to the RIBA
+			$c = 0;
 			foreach ($invoices_info as $invoice) {
 				$debitore = $invoice["debitore"];
-				$banca = $debitore["banca"];
 
 				$ricevuta = new Ricevuta();
 				$ricevuta->numero_ricevuta = $invoice["numero"];
@@ -184,21 +208,24 @@ class ActionsRibaExporter
 				$ricevuta->provincia_debitore = $debitore["provincia"];
 
 				$riba->addRicevuta($ricevuta);
+				$c++;
 			}
 
-			// Get the CBI content
-			$content = $riba->asCBI();
+			// Get the CBI content (if any ricevute were added)
+			if ($c > 0) {
+				$content = $riba->asCBI();
 
-			// Add the RIBA to the list of generated files
-			$ribas[] = [
-				"filename" => "export_riba_" . date("Y-m-d") . ".txt",
-				"content" => $content,
-			];
+				// Add the RIBA to the list of generated files
+				$ribas[] = [
+					"filename" => "export_riba_" . date("Y-m-d") . ".txt",
+					"content" => $content,
+				];
+			}
 		}
 
 		// If no RIBA files were generated, return an error
 		if (empty($ribas)) {
-			setEventMessages($langs->trans("No RIBA file generated"), null, "warnings");
+			setEventMessages($langs->trans("RibaExportError"), null, "warnings");
 			return 0;
 		}
 
@@ -216,6 +243,9 @@ class ActionsRibaExporter
 				header("Pragma: no-cache");
 				header("Expires: 0");
 
+				// Set success message
+				setEventMessages($langs->trans("RibaExportSuccess"), null, "mesgs");
+
 				echo $content;
 				break;
 
@@ -225,7 +255,7 @@ class ActionsRibaExporter
 				$zip_filename = "export_riba_" . date("Ymd_His") . ".zip";
 
 				if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-					setEventMessages($langs->trans("Error creating ZIP file"), null, "errors");
+					setEventMessages($langs->trans("ZipExportError"), null, "errors");
 					return 0;
 				}
 
@@ -239,6 +269,9 @@ class ActionsRibaExporter
 				// Delete the zip file after reading its content
 				unlink($zip_filename);
 
+				// Set success message
+				setEventMessages($langs->trans("RibaExportSuccess"), null, "mesgs");
+
 				// Set the headers for file download
 				header("Content-Type: application/zip");
 				header("Content-Disposition: attachment; filename=\"{$zip_filename}\"");
@@ -246,56 +279,11 @@ class ActionsRibaExporter
 				header("Cache-Control: no-cache, no-store, must-revalidate");
 				header("Pragma: no-cache");
 				header("Expires: 0");
+
 				echo $content;
 				break;
 		}
+
 		exit();
-	}
-
-	function addMoreActionsButtons($parameters, &$object, &$action, $hookmanager)
-	{
-		echo " 2: " . $action;
-
-		if (in_array("invoicecard", explode(":", $parameters["context"]))) {
-			global $conf, $user, $langs, $object, $hookmanager, $db;
-			//echo "<pre>".print_r($object->date_validation,1)."</pre>";
-			if ($object->date_validation != "") {
-				print '<script type="text/javascript">';
-				print "$(document).ready(function() {
-                            $('.butAction').each(function(){
-                            link = $(this).attr('href');
-
-                            if(link.match('modif')){
-                                $(this).remove();
-                                $('.butActionDelete').addClass('butActionRefused');
-                                $(this).addClass('butActionRefused');
-                                $(this).attr('href','#');
-                                $('.butActionDelete').attr('href','#');
-                            } });
-
-                        });";
-				print "</script>";
-			}
-		}
-		if (in_array("paiementcard", explode(":", $parameters["context"]))) {
-			global $conf, $user, $langs, $object, $hookmanager, $db;
-			//echo "<pre>".print_r($object->date_validation,1)."</pre>";
-			print '<script type="text/javascript">';
-			print "$(document).ready(function() {
-                        alert('toto');
-                            $('.butAction').each(function(){
-                            link = $(this).attr('href');
-
-                            if(link.match('modif')){
-                                $(this).remove();
-                                $('.butActionDelete').addClass('butActionRefused');
-                                $(this).addClass('butActionRefused');
-                                $(this).attr('href','#');
-                                $('.butActionDelete').attr('href','#');
-                            } });
-
-                        });";
-			print "</script>";
-		}
 	}
 }
