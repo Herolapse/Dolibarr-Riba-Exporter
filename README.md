@@ -118,6 +118,19 @@ Note: If you export multiple invoices linked to different bank accounts, a ZIP f
 
 
 
+## Credits
+
+This module uses the following third-party libraries:
+
+### CBI Library
+- **Package**: [devcode-it/cbi](https://packagist.org/packages/devcode-it/cbi)
+- **Description**: Italian CBI (Corporate Banking Interbancario) format library for RiBa payments
+- **Author**: DevCode s.n.c. (info@devcode.it)
+- **License**: GPL-3.0
+- **Repository**: [github.com/devcode-it/cbi](https://github.com/devcode-it/cbi)
+
+The CBI library provides the core functionality for generating and reading the Italian RiBa (Ricevuta Bancaria) format according to the official CBI standard specifications.
+
 ## Licenses
 
 ### Main code
