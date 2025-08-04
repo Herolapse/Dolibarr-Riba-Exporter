@@ -2,7 +2,14 @@
 
 ## Features
 
-Description of the module...
+RibaExporter is a module for Dolibarr that allows you to export invoices to RiBa (Ricevuta Bancaria) format, which is an Italian electronic payment system. This module makes it easy to generate RiBa files directly from your Dolibarr invoices for submission to your bank.
+
+Key features include:
+- Export one or multiple invoices to RiBa format
+- Support for multiple bank accounts
+- Mass action for exporting multiple invoices at once
+- Direct export button on invoice cards (TODO)
+- Automatic generation of properly formatted RiBa files
 
 <!--
 ![Screenshot ribaexporter](img/screenshot_ribaexporter.png?raw=true "RibaExporter"){imgmd}
@@ -83,13 +90,39 @@ Using your browser:
   - Go to "Setup"> "Modules"
   - You should now be able to find and enable the module
 
+## Configuration
+
+Before using the RibaExporter module, you must configure your bank accounts:
+
+1. Go to Bank/Cash > Bank accounts
+2. Edit the bank account you want to use for RiBa exports
+3. Go to the "Extra attributes" tab
+4. Set the "SIA Code" provided by your bank
+5. Save the changes
+
+## Usage
+
+### From an invoice card:
+1. Open an invoice that's in "Validated" status
+2. Click the "Export RiBa" button in the action buttons area
+3. The RiBa file will be generated and downloaded automatically
+
+### From the invoice list:
+1. Go to Invoices > Customer invoices
+2. Select one or more invoices using the checkboxes
+3. From the "Selected records actions" dropdown, choose "Export RiBa"
+4. Click "Apply"
+5. The RiBa file will be generated and downloaded automatically
+
+Note: If you export multiple invoices linked to different bank accounts, a ZIP file containing multiple RiBa files will be generated.
+
 
 
 ## Licenses
 
 ### Main code
 
-GPLv3 or (at your option) any later version. See file COPYING for more information.
+GPLv3 or any later version. See file COPYING for more information.
 
 ### Documentation
 
