@@ -71,7 +71,7 @@ class ActionsRibaExporter
 		foreach ($bank_list as $bank_id => $invoices) {
 			// Get bank information
 			$bank = new Account($db);
-			$bank->fetch($invoice->fk_account);
+			$bank->fetch($bank_id);
 			$bank->fetch_optionals();
 
 			// SIA Code
@@ -237,32 +237,29 @@ class ActionsRibaExporter
 			return 0;
 		}
 
-		// If one RIBA file was generated, return it directly
+		// Set success message
+		setEventMessages($langs->trans("RibaExportSuccess"), null, "mesgs");
+
+		// Generate unique identifier for this download
+		$download_id = uniqid("riba_", true);
+
+		// Store download data in session
 		switch (count($ribas)) {
 			case 1:
-				$filename = $ribas[0]["filename"];
-				$content = $ribas[0]["content"];
-
-				// Set success message
-				setEventMessages($langs->trans("RibaExportSuccess"), null, "mesgs");
-
-				// Set the headers for file download
-				header("Content-Type: application/octet-stream");
-				header("Content-Disposition: attachment; filename=\"{$filename}\"");
-				header("Content-Length: " . strlen($content));
-				header("Cache-Control: no-cache, no-store, must-revalidate");
-				header("Pragma: no-cache");
-				header("Expires: 0");
-
-				echo $content;
+				// Single file
+				$_SESSION["riba_downloads"][$download_id] = [
+					"filename" => $ribas[0]["filename"],
+					"content" => $ribas[0]["content"],
+					"content_type" => "application/octet-stream",
+				];
 				break;
-
 			default:
-				// If multiple RIBA files were generated, create a zip file
+				// Multiple files - create zip
 				$zip = new ZipArchive();
-				$zip_filename = "export_riba_" . date("Ymd_His") . ".zip";
+				$zip_filename = "export_ribas_" . date("Y-m-d") . ".zip";
+				$temp_file = tempnam(sys_get_temp_dir(), "riba_zip");
 
-				if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+				if ($zip->open($temp_file, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
 					setEventMessages($langs->trans("ZipExportError"), null, "errors");
 					return 0;
 				}
@@ -272,25 +269,19 @@ class ActionsRibaExporter
 				}
 
 				$zip->close();
-				$content = file_get_contents($zip_filename);
+				$content = file_get_contents($temp_file);
+				unlink($temp_file);
 
-				// Delete the zip file after reading its content
-				unlink($zip_filename);
-
-				// Set success message
-				setEventMessages($langs->trans("RibaExportSuccess"), null, "mesgs");
-
-				// Set the headers for file download
-				header("Content-Type: application/zip");
-				header("Content-Disposition: attachment; filename=\"{$zip_filename}\"");
-				header("Content-Length: " . strlen($content));
-				header("Cache-Control: no-cache, no-store, must-revalidate");
-				header("Pragma: no-cache");
-				header("Expires: 0");
-
-				echo $content;
+				$_SESSION["riba_downloads"][$download_id] = [
+					"filename" => $zip_filename,
+					"content" => $content,
+					"content_type" => "application/zip",
+				];
 				break;
 		}
+
+		// Use iframe to trigger download without page redirect
+		echo '<iframe src="' . DOL_URL_ROOT . "/custom/ribaexporter/download.php?id=" . $download_id . '" style="display:none;"></iframe>';
 
 		return 0;
 	}
