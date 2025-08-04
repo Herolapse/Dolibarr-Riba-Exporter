@@ -99,7 +99,7 @@ class ActionsRibaExporter
 			// Prepare the RIBA export information
 			$riba_info = [
 				"nome_supporto" => "",
-				"data_creazione" => date("Y-m-d"),
+				"data_creazione" => date("dmy"),
 
 				"creditore" => [
 					"ragione_sociale" => $bank->owner_name,
@@ -127,7 +127,7 @@ class ActionsRibaExporter
 			$banca = $creditore["banca"];
 
 			// Format as dmy
-			$intestazione->data_creazione = date("dmy", strtotime($riba_info["data_creazione"]));
+			$intestazione->data_creazione = $riba_info["data_creazione"];
 			$intestazione->nome_supporto = $riba_info["nome_supporto"];
 
 			// Bank information
@@ -175,13 +175,12 @@ class ActionsRibaExporter
 
 				$invoices_info[] = [
 					"numero" => $invoice->ref,
-					"data_scadenza" => date("dmy", strtotime($invoice->date_lim_reglement)),
+					"data_scadenza" => gmdate("dmy", $invoice->date_lim_reglement),
 					"descrizione" => $invoice->description ?? "",
 					"importo" => $invoice->total_ttc,
 
 					"debitore" => [
 						"codice" => $invoice->ref_client,
-
 						"ragione_sociale" => $creditor->name,
 						"partita_iva" => preg_replace("/^[A-Z]{2}/", "", $creditor->tva_intra),
 						"codice_fiscale" => "",
@@ -200,8 +199,9 @@ class ActionsRibaExporter
 
 				$ricevuta = new Ricevuta();
 				$ricevuta->numero_ricevuta = $invoice["numero"];
-				$ricevuta->scadenza = date("dmy", strtotime($invoice["data_scadenza"]));
+				$ricevuta->scadenza = $invoice["data_scadenza"];
 				$ricevuta->descrizione_banca = strtoupper($invoice["descrizione"]);
+				$ricevuta->descrizione = "FATT. " . $invoice["numero"] . " DEL " . date("d/m/Y");
 
 				// Transform in cents
 				$ricevuta->importo = round($invoice["importo"] * 100, 0);
