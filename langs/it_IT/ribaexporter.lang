@@ -1,5 +1,14 @@
 # Translation file
 
+# Module
+ModuleRibaExporterName = RIBA Exporter
+ModuleRibaExporterDesc = Modulo Dolibarr per esportare fatture in formato RIBA per il sistema bancario italiano
+
+# Setup
+RibaExporterSetup = Configurazione RIBA Exporter
+RibaExporterSetupPage = Pagina di configurazione per il modulo RIBA Exporter
+
+# Translations
 ExportRiba = Esporta Riba
 SIAMissing = Codice SIA mancante
 InvalidInvoice = Fattura non valida

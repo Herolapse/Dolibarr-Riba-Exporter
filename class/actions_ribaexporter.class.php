@@ -15,6 +15,9 @@ class ActionsRibaExporter
 	{
 		global $langs;
 
+		// Load language file
+		$langs->loadLangs(["ribaexporter@ribaexporter"]);
+
 		// Add Export to RIBA option to invoice list mass actions
 		if (in_array("invoicelist", explode(":", $parameters["context"]))) {
 			$this->resprints = '<option value="export_to_riba">' . $langs->trans("ExportRiba") . "</option>";
@@ -42,6 +45,9 @@ class ActionsRibaExporter
 	private function exportRibas($parameters, &$object, &$action, $hookmanager)
 	{
 		global $conf, $langs, $db, $user;
+
+		// Load language file
+		$langs->loadLangs(["ribaexporter@ribaexporter"]);
 
 		// Retrive company information
 		$company = new Societe($db);
@@ -237,6 +243,9 @@ class ActionsRibaExporter
 				$filename = $ribas[0]["filename"];
 				$content = $ribas[0]["content"];
 
+				// Set success message
+				setEventMessages($langs->trans("RibaExportSuccess"), null, "mesgs");
+
 				// Set the headers for file download
 				header("Content-Type: application/octet-stream");
 				header("Content-Disposition: attachment; filename=\"{$filename}\"");
@@ -244,9 +253,6 @@ class ActionsRibaExporter
 				header("Cache-Control: no-cache, no-store, must-revalidate");
 				header("Pragma: no-cache");
 				header("Expires: 0");
-
-				// Set success message
-				setEventMessages($langs->trans("RibaExportSuccess"), null, "mesgs");
 
 				echo $content;
 				break;
@@ -286,6 +292,6 @@ class ActionsRibaExporter
 				break;
 		}
 
-		exit();
+		return 0;
 	}
 }

@@ -1,5 +1,14 @@
 # Translation file
 
+# Module
+ModuleRibaExporterName = RIBA Exporter
+ModuleRibaExporterDesc = Dolibarr module to export invoices to RIBA format for Italian banking
+
+# Setup
+RibaExporterSetup = RIBA Exporter Setup
+RibaExporterSetupPage = Configuration page for RIBA Exporter module
+
+# Translations
 ExportRiba = Export Riba
 SIAMissing = SIA code missing
 InvalidInvoice = Invalid invoice
