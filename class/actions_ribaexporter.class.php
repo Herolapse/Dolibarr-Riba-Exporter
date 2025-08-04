@@ -168,7 +168,7 @@ class ActionsRibaExporter
 				$invoice->update($user);
 
 				$invoices_info[] = [
-					"numero" => 1,
+					"numero" => $invoice->ref,
 					"data_scadenza" => date("dmy", strtotime($invoice->date_lim_reglement)),
 					"descrizione" => $invoice->description ?? "",
 					"importo" => $invoice->total_ttc,
@@ -195,8 +195,10 @@ class ActionsRibaExporter
 				$ricevuta = new Ricevuta();
 				$ricevuta->numero_ricevuta = $invoice["numero"];
 				$ricevuta->scadenza = date("dmy", strtotime($invoice["data_scadenza"]));
-				$ricevuta->importo = $invoice["importo"];
 				$ricevuta->descrizione_banca = strtoupper($invoice["descrizione"]);
+
+				// Transform in cents
+				$ricevuta->importo = round($invoice["importo"] * 100, 0);
 
 				// Informazioni sul debitore
 				$ricevuta->codice_cliente = $debitore["codice"];
